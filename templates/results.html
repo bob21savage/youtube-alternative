@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Results</title>
+</head>
+<body>
+    <h1>Search Results</h1>
+    <div id="results">
+        {% for item in results %}
+        <div class="video">
+            <h2>{{ item.snippet.title }}</h2>
+            <p>{{ item.snippet.description }}</p>
+            <div id="player-{{ item.id.videoId }}"></div>
+            <script>
+                // This will use the YouTube Player API from client.js
+                document.addEventListener('DOMContentLoaded', function() {
+                    new YT.Player('player-{{ item.id.videoId }}', {
+                        videoId: '{{ item.id.videoId }}',
+                        height: '360',
+                        width: '640'
+                    });
+                });
+            </script>
+        </div>
+        {% endfor %}
+    </div>
+    <script src="{{ url_for('static', filename='client.js') }}"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>

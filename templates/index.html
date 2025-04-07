@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Search</title>
+</head>
+<body>
+    <h1>YouTube Video Search</h1>
+    <form id="searchForm">
+        <label for="query">Search Query:</label>
+        <input type="text" id="query" name="query" required>
+        <button type="submit">Search</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const query = document.getElementById('query').value;
+            const response = await fetch('/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
+            });
+            const data = await response.json();
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            data.items.forEach(item => {
+                const videoDiv = document.createElement('div');
+                videoDiv.innerHTML = `
+                    <h3>${item.snippet.title}</h3>
+                    <p>Video ID: ${item.id.videoId}</p>
+                `;
+                resultsDiv.appendChild(videoDiv);
+            });
+        });
+        </script>
+    <script src="{{ url_for('static', filename='client.js') }}"></script>
+</body>
+</html>
