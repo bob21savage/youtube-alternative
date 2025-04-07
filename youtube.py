@@ -88,7 +88,8 @@ def create_client_secrets():
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
             "client_secret": os.getenv("CLIENT_SECRET", "YOUR_CLIENT_SECRET"),
             "redirect_uris": [
-                "http://localhost"
+                "http://localhost:5000/",  # Default redirect URI
+                "http://localhost:8080/redirect"  # Additional redirect URI
             ]
         }
     }
