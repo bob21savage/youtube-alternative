@@ -17,8 +17,8 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Replace with the scope you want to use
-SCOPES = ["[https://www.googleapis.com/auth/youtube.force-ssl"]
+# Replace with non-sensitive scopes
+SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
 
 app = Flask(__name__)
 youtube = None  # Global variable for YouTube API client
@@ -28,10 +28,24 @@ youtube = None  # Global variable for YouTube API client
 def index():
     return render_template('index.html')
 
-@app.route('/results')
+@app.route('/privacy-policy')
+def privacy_policy():
+    return render_template('privacy_policy.html')
+
+@app.route('/results', methods=['GET'])
 def results():
-    # some code to generate results
-    return render_template('results.html')
+    query = request.args.get('query', '').strip()
+    if not query:
+        return render_template('results.html', results=[])
+    
+    # Perform search using the YouTube API
+    response = youtube.search().list(
+        part="id,snippet",
+        q=query,
+        type="video"
+    ).execute()
+    
+    return render_template('results.html', results=response.get('items', []))
 
 def authenticate_user():
     # Create a flow object
