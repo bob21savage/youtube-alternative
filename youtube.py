@@ -54,7 +54,7 @@ def authenticate_user():
             "client_secrets.json", SCOPES)
 
         # Dynamically set the redirect URI
-        redirect_uri = os.getenv("REDIRECT_URI", "http://localhost:3000/auth/google/callback")
+        redirect_uri = os.getenv("REDIRECT_URI", "http://localhost:3000/")
         flow.redirect_uri = redirect_uri
 
         # Run the flow to get the credentials with a fixed port
@@ -107,21 +107,23 @@ def search_videos(youtube, query):
 def create_client_secrets():
     client_secrets = {
         "installed": {
-            "client_id": os.getenv("CLIENT_ID", "YOUR_CLIENT_ID"),
-            "project_id": os.getenv("PROJECT_ID", "YOUR_PROJECT_ID"),
+            "client_id": os.getenv("CLIENT_ID"),
+            "project_id": os.getenv("PROJECT_ID"),
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_secret": os.getenv("CLIENT_SECRET", "YOUR_CLIENT_SECRET"),
+            "client_secret": os.getenv("CLIENT_SECRET"),
             "redirect_uris": [
-                os.getenv("REDIRECT_URI", "http://localhost:3000/auth/google/callback")  # Updated redirect URI
+                os.getenv("REDIRECT_URI")  # Use only the environment variable
             ]
         }
     }
 
     # Validate client secrets before writing to file
-    if not client_secrets["installed"]["client_id"] or not client_secrets["installed"]["client_secret"]:
-        print("Error: CLIENT_ID or CLIENT_SECRET is missing. Please check your .env file.")
+    if not all([client_secrets["installed"]["client_id"], 
+                client_secrets["installed"]["client_secret"], 
+                client_secrets["installed"]["redirect_uris"][0]]):
+        print("Error: CLIENT_ID, CLIENT_SECRET, or REDIRECT_URI is missing. Please check your .env file.")
         exit(1)
 
     with open("client_secrets.json", "w") as f:
