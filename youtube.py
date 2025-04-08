@@ -48,18 +48,26 @@ def results():
     return render_template('results.html', results=response.get('items', []))
 
 def authenticate_user():
-    # Create a flow object
-    flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
-        "client_secrets.json", SCOPES)
+    try:
+        # Create a flow object
+        flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
+            "client_secrets.json", SCOPES)
 
-    # Dynamically set the redirect URI
-    redirect_uri = os.getenv("REDIRECT_URI", "http://localhost:5000/")
-    flow.redirect_uri = redirect_uri
+        # Dynamically set the redirect URI
+        redirect_uri = os.getenv("REDIRECT_URI", "http://localhost:3000/auth/google/callback")
+        flow.redirect_uri = redirect_uri
 
-    # Run the flow to get the credentials
-    credentials = flow.run_local_server(port=0)  # Localhost setup for OAuth 2.0
+        # Run the flow to get the credentials
+        credentials = flow.run_local_server(port=0)  # Localhost setup for OAuth 2.0
 
-    return credentials
+        return credentials
+    except FileNotFoundError:
+        print("Error: 'client_secrets.json' file not found. Please ensure it exists and is correctly configured.")
+        exit(1)
+    except google_auth_oauthlib.flow.FlowExchangeError as e:
+        print(f"Error during authentication: {e}")
+        print("Please verify your CLIENT_ID, CLIENT_SECRET, and REDIRECT_URI in the Google Cloud Console.")
+        exit(1)
 
 @app.route('/search', methods=['POST'])
 def search_endpoint():
@@ -106,10 +114,15 @@ def create_client_secrets():
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
             "client_secret": os.getenv("CLIENT_SECRET", "YOUR_CLIENT_SECRET"),
             "redirect_uris": [
-                os.getenv("REDIRECT_URI", "http://localhost:5000/")  # Default redirect URI
+                os.getenv("REDIRECT_URI", "http://localhost:3000/auth/google/callback")  # Updated redirect URI
             ]
         }
     }
+
+    # Validate client secrets before writing to file
+    if not client_secrets["installed"]["client_id"] or not client_secrets["installed"]["client_secret"]:
+        print("Error: CLIENT_ID or CLIENT_SECRET is missing. Please check your .env file.")
+        exit(1)
 
     with open("client_secrets.json", "w") as f:
         json.dump(client_secrets, f)
