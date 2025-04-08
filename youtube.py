@@ -52,6 +52,10 @@ def authenticate_user():
     flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
         "client_secrets.json", SCOPES)
 
+    # Dynamically set the redirect URI
+    redirect_uri = os.getenv("REDIRECT_URI", "http://localhost:5000/")
+    flow.redirect_uri = redirect_uri
+
     # Run the flow to get the credentials
     credentials = flow.run_local_server(port=0)  # Localhost setup for OAuth 2.0
 
@@ -102,8 +106,7 @@ def create_client_secrets():
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
             "client_secret": os.getenv("CLIENT_SECRET", "YOUR_CLIENT_SECRET"),
             "redirect_uris": [
-                "http://localhost:10000/",  # Default redirect URI
-                "http://localhost:8080/redirect"  # Additional redirect URI
+                os.getenv("REDIRECT_URI", "http://localhost:5000/")  # Default redirect URI
             ]
         }
     }
