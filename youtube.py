@@ -17,8 +17,8 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Replace with non-sensitive scopes
-SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
+# Replace with full YouTube access scope
+SCOPES = ["https://www.googleapis.com/auth/youtube"]
 
 app = Flask(__name__)
 youtube = None  # Global variable for YouTube API client
@@ -55,18 +55,21 @@ def authenticate_user():
 
         # Dynamically set the redirect URI
         redirect_uri = os.getenv("REDIRECT_URI", "http://localhost:3000/")
+        print(f"Using redirect URI: {redirect_uri}")  # Log the redirect URI
         flow.redirect_uri = redirect_uri
 
-        # Run the flow to get the credentials with a fixed port
-        credentials = flow.run_local_server(port=3000)  # Use port 3000 for OAuth 2.0
+        # Run the flow to get the credentials with access_type=offline
+        credentials = flow.run_local_server(port=3000, access_type="offline")  # Request offline access
 
         return credentials
     except FileNotFoundError:
         print("Error: 'client_secrets.json' file not found. Please ensure it exists and is correctly configured.")
         exit(1)
     except google_auth_oauthlib.flow.FlowExchangeError as e:
-        print(f"Error during authentication: {e}")
-        print("Please verify your CLIENT_ID, CLIENT_SECRET, and REDIRECT_URI in the Google Cloud Console.")
+        if "access_denied" in str(e):
+            print("Error: Access was denied by the user.")
+        else:
+            print(f"Error during authentication: {e}")
         exit(1)
 
 @app.route('/search', methods=['POST'])
@@ -129,6 +132,29 @@ def create_client_secrets():
     with open("client_secrets.json", "w") as f:
         json.dump(client_secrets, f)
 
+def check_granted_scopes(credentials):
+    # List of scopes your application requested
+    requested_scopes = set(SCOPES)
+
+    # Scopes granted by the user
+    granted_scopes = set(credentials.scopes)
+
+    # Determine which scopes were granted
+    granted_scopes_dict = {
+        "YouTube Readonly": "https://www.googleapis.com/auth/youtube.readonly" in granted_scopes
+    }
+
+    print("Granted Scopes:")
+    for scope, granted in granted_scopes_dict.items():
+        print(f"{scope}: {'Granted' if granted else 'Not Granted'}")
+
+    # Log any missing scopes
+    missing_scopes = requested_scopes - granted_scopes
+    if missing_scopes:
+        print("The following requested scopes were not granted:")
+        for scope in missing_scopes:
+            print(f"- {scope}")
+
 def main():
     global youtube
     # Disable OAuthlib's HTTPS verification when running locally.
@@ -143,6 +169,9 @@ def main():
 
     # Authenticate the user
     credentials = authenticate_user()
+
+    # Check granted scopes
+    check_granted_scopes(credentials)
 
     # Create a YouTube API client
     youtube = googleapiclient.discovery.build(
