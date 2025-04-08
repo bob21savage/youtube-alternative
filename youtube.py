@@ -57,8 +57,8 @@ def authenticate_user():
         redirect_uri = os.getenv("REDIRECT_URI", "http://localhost:3000/auth/google/callback")
         flow.redirect_uri = redirect_uri
 
-        # Run the flow to get the credentials
-        credentials = flow.run_local_server(port=0)  # Localhost setup for OAuth 2.0
+        # Run the flow to get the credentials with a fixed port
+        credentials = flow.run_local_server(port=3000)  # Use port 3000 for OAuth 2.0
 
         return credentials
     except FileNotFoundError:
@@ -147,7 +147,7 @@ def main():
         "youtube", "v3", credentials=credentials)
 
     # Start the Flask server
-    app.run(port=5000)
+    app.run(port=3000)
 
 if __name__ == "__main__":
     main()
