@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: youtube-flask-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python youtube.py
+    envVars:
+      - key: CLIENT_ID
+        sync: false
+      - key: CLIENT_SECRET
+        sync: false
+      - key: PROJECT_ID
+        sync: false
+      - key: REDIRECT_URI
+        sync: false
